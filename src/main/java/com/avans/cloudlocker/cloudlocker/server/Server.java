@@ -176,7 +176,7 @@ public class Server {
                         if ("knock-knock".equalsIgnoreCase(inputLine)) {
                             out.println("Who's there?");
                         } else {
-                            out.println("You're supposed to say 'knock-knock'!");
+                            out.println("Je hebt: '" + inputLine + "' gestuurd.");
                         }
                     }
                 } catch (IOException e) {
@@ -192,7 +192,6 @@ public class Server {
                 }
             }
         }
-
         public static void main(String[] args) throws IOException {
             Server server = new Server();
             server.start(6666);
