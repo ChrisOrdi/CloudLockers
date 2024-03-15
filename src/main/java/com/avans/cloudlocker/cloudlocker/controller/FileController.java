@@ -2,6 +2,7 @@ package com.avans.cloudlocker.cloudlocker.controller;
 
 import com.avans.cloudlocker.cloudlocker.model.FileDocument;
 import com.avans.cloudlocker.cloudlocker.service.FileService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,56 +16,55 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/file")
 public class FileController {
+
     private final FileService fileService;
-
-    Logger logger = Logger.getLogger(getClass().getName());
-
+    private final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
 
     @Autowired
     public FileController(FileService fileService) {
         this.fileService = fileService;
     }
 
-    // Get Mappings
-
     @GetMapping("{foldername}/{filename}")
-    public String getFile(@PathVariable String foldername, @PathVariable String filename){
-
-        return "File returned for folder: " + foldername +", file: " + filename;
+    public ResponseEntity<String> getFile(@PathVariable String foldername, @PathVariable String filename) {
+        logger.info("Retrieving file from folder: {}, filename: {}");
+        // Voeg logica toe om bestand op te halen
+        return ResponseEntity.ok("File returned for folder: " + foldername + ", file: " + filename);
     }
 
-    // get the state of the client
-
     @PostMapping("{foldername}/{filename}/{username}")
-    public String handleAccess(@PathVariable String foldername, @PathVariable String filename, @PathVariable String username)
-    { // moet FileDocument zijn ipv String
-        // TODO: Logica om toegang te geven
-        return "File received for folder: " + foldername + ", file: " + filename + ", user: " + username;
+    public ResponseEntity<String> handleAccess(@PathVariable String foldername, @PathVariable String filename, @PathVariable String username) {
+        logger.info("Handling access for folder: {}, file: {}, user: {}");
+        // Voeg logica toe om toegang te verwerken
+        return ResponseEntity.ok("File received for folder: " + foldername + ", file: " + filename + ", user: " + username);
     }
 
     @PostMapping("{foldername}")
-    public String uploadFile(@PathVariable String foldername) {
-
-    return "Upload successfull";
-        // Gebruik dit endpoint om een nieuw bestand naar een specifieke folder te uploaden. Dit valt onder het uploaden van nieuwe bestanden naar de server.
+    public ResponseEntity<String> uploadFile(@PathVariable String foldername) {
+        logger.info("Uploading file to folder: {}");
+        // Voeg logica toe om bestand te uploaden
+        return ResponseEntity.ok("Upload successful");
     }
 
     @PutMapping("{foldername}/{filename}")
-    public String updateFile(@PathVariable String foldername, @PathVariable String filename)
-    {
-        return "Update successfull";
+    public ResponseEntity<String> updateFile(@PathVariable String foldername, @PathVariable String filename) {
+        logger.info("Updating file in folder: {}, filename: {}");
+        // Voeg logica toe om bestand bij te werken
+        return ResponseEntity.ok("Update successful");
     }
 
     @DeleteMapping("{foldername}/{filename}")
-    public String deleteFile(@PathVariable String foldername, @PathVariable String filename)
-    {
-        return "File Deletion succesfull";
+    public ResponseEntity<String> deleteFile(@PathVariable String foldername, @PathVariable String filename) {
+        logger.info("Deleting file from folder: {}, filename: {}");
+        // Voeg logica toe om bestand te verwijderen
+        return ResponseEntity.ok("File deletion successful");
     }
 
     @DeleteMapping("{foldername}/{filename}/{username}")
-    public String deleteAccessRights(@PathVariable String foldername, @PathVariable String filename, @PathVariable String username)
-    {
-        return "Access right removed for user: " + username;
+    public ResponseEntity<String> deleteAccessRights(@PathVariable String foldername, @PathVariable String filename, @PathVariable String username) {
+        logger.info("Removing access rights for folder: {}, file: {}, user: {}");
+        // Voeg logica toe om toegangsrechten te verwijderen
+        return ResponseEntity.ok("Access right removed for user: " + username);
     }
 
 }

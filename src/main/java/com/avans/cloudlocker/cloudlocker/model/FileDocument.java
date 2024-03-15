@@ -2,9 +2,7 @@ package com.avans.cloudlocker.cloudlocker.model;
 
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document // @document wordt gebruikt om een klasse te mappen naar een noSQl database
 public class FileDocument {
 
     @Id

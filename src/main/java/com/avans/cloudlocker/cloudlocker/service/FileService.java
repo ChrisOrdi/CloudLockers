@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 @Service
 public class FileService {
+
     Logger logger = Logger.getLogger(getClass().getName());
 
     private final FileRepository fileRepository;
@@ -28,24 +29,25 @@ public class FileService {
         this.fileRepository = fileRepository;
     }
 
-    public FileDocument saveFile(FileDocument file) {
+    public String saveFile(FileDocument file) {
         // Logica voor het opslaan van bestandsinformatie
-        return fileRepository.save(file);
+     //   return fileRepository.save(file);
+        return "blabla";
     }
 
-    public List<FileDocument> getAllFiles() {
+    public List<String> getAllFiles() {
         // Logica voor het ophalen van alle bestanden
         return fileRepository.findAll();
     }
 
-    public FileDocument getFileById(String id) {
+    public String getFileById(String id) {
         // Logica voor het ophalen van een specifiek bestand
-        return fileRepository.findById(id).orElse(null);
+        return fileRepository.findById(Integer.valueOf(id)).orElse(null);
     }
 
     public void deleteFile(String id) {
         // Logica voor het verwijderen van een bestand
-        fileRepository.deleteById(id);
+        fileRepository.deleteById(Integer.valueOf(id));
     }
 
     public void storeFile(MultipartFile file) throws IOException {
@@ -58,7 +60,7 @@ public class FileService {
         // Voeg logica toe om de bestandsmetadata te laden van MongoDB
     }
 
-    public List<FileDocument> listAllFiles() {
+    public List<String> listAllFiles() {
         // Haal alle bestandsmetadata op uit MongoDB
         return fileRepository.findAll();
     }

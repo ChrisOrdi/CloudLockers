@@ -1,11 +1,10 @@
 package com.avans.cloudlocker.cloudlocker.repository;
 
-import com.avans.cloudlocker.cloudlocker.model.FileDocument;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FileRepository extends MongoRepository<FileDocument, String> { /* String omdat MongoDB ID's vaak als String worden gepresenteerd*/
+public interface FileRepository extends JpaRepository<String, Integer> { // String en Integer moet nog aangepast worden.
 
     // hieronder kunnen we queries zetten
 }
