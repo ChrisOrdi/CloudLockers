@@ -14,17 +14,18 @@ public class Server {
     public static void main(String[] args) {
         LocalDateTime now = LocalDateTime.now();
         Runtime runtime = Runtime.getRuntime();
-        long maxMemory = runtime.maxMemory();
-        long allocatedMemory = runtime.totalMemory();
-        long freeMemory = runtime.freeMemory();
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            long maxMemory = runtime.maxMemory();
+            long allocatedMemory = runtime.totalMemory();
+            long freeMemory = runtime.freeMemory();
+
+            LOGGER.info("Listening to port: " + portId);
+            LOGGER.info(String.format("Initialization Time: %s\nMax Memory: %d bytes\nAllocated Memory: %d bytes\nFree Memory: %d bytes\nAvailable Processors: %d",
+                    now, maxMemory, allocatedMemory, freeMemory, runtime.availableProcessors()));
+        }
 
         try (ServerSocket serverSocket = new ServerSocket(portId)) {
-            LOGGER.info("Listening to port: " + portId);
-            LOGGER.info("Initialization Time: " + now +
-                    "\nMax Memory: " + maxMemory + " bytes" +
-                    "\nAllocated Memory: " + allocatedMemory + " bytes" +
-                    "\nFree Memory: " + freeMemory + " bytes" +
-                    "\nAvailable Processors: " + runtime.availableProcessors());
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info(clientSocket + " connected");
@@ -34,6 +35,7 @@ public class Server {
             LOGGER.log(Level.SEVERE, "Server exception", e);
         }
     }
+
 
     private static class ClientHandler extends Thread {
         private Socket clientSocket;
@@ -46,22 +48,36 @@ public class Server {
             try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
                 while (true) {
                     String command = dataInputStream.readUTF();
-
-                    // Log een bericht elke keer als er iets wordt ontvangen
                     LOGGER.info("Client stuurde bericht: " + command);
-
-
 
                     if (command.equals("exit()")) {
                         break;
                     } else if (command.startsWith("upload")) {
                         receiveFile(dataInputStream);
+                    } else if (command.startsWith("create ")) {
+                        createDirectory(command.substring(7)); // Verwijder "create " om de mapnaam te krijgen
                     }
                 }
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
             }
         }
+
+        private void createDirectory(String directoryName) {
+            String userHomeFolder = System.getProperty("user.home");
+            String desktopPath = userHomeFolder + "/Desktop/" + directoryName;
+            File directory = new File(desktopPath);
+            if (!directory.exists()) {
+                if (directory.mkdir()) {
+                    LOGGER.info("Directory created: " + directory.getPath());
+                } else {
+                    LOGGER.severe("Failed to create directory: " + directory.getPath());
+                }
+            } else {
+                LOGGER.info("Directory already exists: " + directory.getPath());
+            }
+        }
+
 
 
         private void receiveFile(DataInputStream dataInputStream) throws IOException {

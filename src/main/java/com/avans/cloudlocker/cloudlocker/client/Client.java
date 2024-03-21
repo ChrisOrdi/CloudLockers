@@ -14,13 +14,17 @@ public class Client {
             while (true) {
                 System.out.print("input> ");
                 String input = scanner.nextLine();
-                if (input.equalsIgnoreCase("exit()")) {
+
+                if ("exit()".equalsIgnoreCase(input)) {
                     dataOutputStream.writeUTF(input);
                     break;
-                } else if (input.startsWith("upload")) {
+                } else if (input.startsWith("upload ")) {
                     String filePath = input.split(" ")[1];
                     dataOutputStream.writeUTF("upload");
                     uploadFile(filePath, dataOutputStream);
+                } else {
+                    // Verstuur elk ander commando naar de server
+                    dataOutputStream.writeUTF(input);
                 }
             }
         } catch (Exception e) {
@@ -28,6 +32,7 @@ public class Client {
             e.printStackTrace();
         }
     }
+
 
     private static void uploadFile(String filePath, DataOutputStream dataOutputStream) throws IOException {
         File file = new File(filePath);
