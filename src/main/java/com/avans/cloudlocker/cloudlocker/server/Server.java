@@ -1,188 +1,78 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
-import java.io.IOException; // libraries
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
 public class Server {
-    private ServerSocket serverSocket;
-    private Logger logger;
-//    private ExecutorService pool; // Voor het beheren van meerdere clients
+    private static final int portId = 5101;
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
+    public static void main(String[] args) {
+        LocalDateTime now = LocalDateTime.now();
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory();
+        long allocatedMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
 
-
-    // Binnen de ClientHandler class van de server
-
-        // constructor of ServerSocket class
-        public Server(ServerSocket serverSocket){
-            this.serverSocket = serverSocket;
-        }
-
-        public void serverStart(){
-
-            try{
-                // check and loop the serverSocket
-                while(!serverSocket.isClosed()){
-                    Socket socket = serverSocket.accept();
-                    System.out.println("New Client Connected");
-                    // implemented an object which handle runnable class
-                    ClientHandler clientHandler = new ClientHandler(socket);
-
-                    Thread thread = new Thread(clientHandler);
-                    thread.start();
-                }
-            } catch (IOException e){
-
-            }
-        }
-        // this will close the server
-        public void closerServer(){
-
-            try{
-                if(serverSocket != null){
-                    serverSocket.close();
-                }
-            } catch(IOException e){
-                e.printStackTrace();
-            }
-        }
-
-        public static void main(String[] args) throws Exception {
-            ServerSocket serverSocket = new ServerSocket(1234);
-            Server server = new Server(serverSocket);
-            server.serverStart();
-        }
-    }
-
-     /*
-
-    public Server(int port, int poolSize) throws IOException {
-        serverSocket = new ServerSocket(port);
-        pool = Executors.newFixedThreadPool(poolSize);
-    }
-
-    public void start() {
-        System.out.println("Server gestart op poort " + serverSocket.getLocalPort());
-        try {
-            while (!serverSocket.isClosed()) {
+        try (ServerSocket serverSocket = new ServerSocket(portId)) {
+            LOGGER.info("Listening to port: " + portId);
+            LOGGER.info("Initialization Time: " + now +
+                    "\nMax Memory: " + maxMemory + " bytes" +
+                    "\nAllocated Memory: " + allocatedMemory + " bytes" +
+                    "\nFree Memory: " + freeMemory + " bytes" +
+                    "\nAvailable Processors: " + runtime.availableProcessors());
+            while (true) {
                 Socket clientSocket = serverSocket.accept();
-                pool.execute(new ClientHandler(clientSocket));
+                LOGGER.info(clientSocket + " connected");
+                new ClientHandler(clientSocket).start();
             }
-        } catch (IOException e) {
-            System.out.println("Server Exception: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            stop();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Server exception", e);
         }
     }
 
-    public void stop() {
-        try {
-            if (serverSocket != null) {
-                serverSocket.close();
-            }
-            if (pool != null) {
-                pool.shutdown();
-            }
-        } catch (IOException e) {
-            System.out.println("Fout bij het sluiten van de server: " + e.getMessage());
-        }
-    }
-
-    private static class ClientHandler implements Runnable {
-        private Socket socket;
+    private static class ClientHandler extends Thread {
+        private Socket clientSocket;
 
         public ClientHandler(Socket socket) {
-            this.socket = socket;
+            this.clientSocket = socket;
         }
 
         public void run() {
-            try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                 PrintWriter output = new PrintWriter(socket.getOutputStream(), true)) {
+            try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
+                while (true) {
+                    String command = dataInputStream.readUTF();
 
-                String fileName;
-                String command = input.readLine();
-                switch (command) {
-                    case "UPLOAD":
-                        fileName = input.readLine();
-                        receiveFile(socket, fileName);
+                    if (command.equals("exit()")) {
                         break;
-                    case "DOWNLOAD":
-                        fileName = input.readLine();
-                        sendFile(socket, fileName, output);
-                        break;
-                    case "DELETE":
-                        fileName = input.readLine();
-                        deleteFile(fileName, output);
-                        break;
-                    default:
-                        output.println("Ongeldig commando");
-                        break;
+                    } else if (command.startsWith("upload")) {
+                        receiveFile(dataInputStream);
+                    }
                 }
             } catch (IOException e) {
-                System.out.println("Handler Exception: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Connection error", e);
             }
         }
 
-        private void receiveFile(Socket socket, String fileName) {
-            try (DataInputStream dis = new DataInputStream(socket.getInputStream());
-                 FileOutputStream fos = new FileOutputStream(fileName)) {
+        private void receiveFile(DataInputStream dataInputStream) throws IOException {
+            String fileName = dataInputStream.readUTF();
+            long fileSize = dataInputStream.readLong();
+            try (FileOutputStream fos = new FileOutputStream(fileName);
+                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
                 byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = dis.read(buffer)) != -1) {
-                    fos.write(buffer, 0, bytesRead);
+                int read = 0;
+                long totalRead = 0;
+                while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int)Math.min(buffer.length, fileSize - totalRead))) != -1) {
+                    bos.write(buffer, 0, read);
+                    totalRead += read;
                 }
-                System.out.println("Bestand ontvangen: " + fileName);
-            } catch (IOException e) {
-                System.out.println("Ontvangen bestand Exception: " + e.getMessage());
-                e.printStackTrace();
+                bos.flush();
             }
-        }
-
-        private void sendFile(Socket socket, String fileName, PrintWriter output) {
-            File file = new File(fileName);
-            if (!file.exists()) {
-                output.println("Bestand niet gevonden");
-                return;
-            }
-
-            try (DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                 FileInputStream fis = new FileInputStream(file)) {
-                byte[] buffer = new byte[4096];
-                while (fis.read(buffer) > 0) {
-                    dos.write(buffer);
-                }
-                System.out.println("Bestand verzonden: " + fileName);
-            } catch (IOException e) {
-                System.out.println("Verzend bestand Exception: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        private void deleteFile(String fileName, PrintWriter output) {
-            File file = new File(fileName);
-            if (file.delete()) {
-                System.out.println("Bestand verwijderd: " + fileName);
-                output.println("Bestand verwijderd: " + fileName);
-            } else {
-                System.out.println("Kon bestand niet verwijderen: " + fileName);
-                output.println("Fout bij het verwijderen van bestand");
-            }
+            LOGGER.info("File " + fileName + " received.");
         }
     }
-
-    public static void main(String[] args) {
-        int port = 6666; // Stel een poortnummer in
-        int poolSize = 10; // Aantal threads in de pool
-        try {
-            Server server = new Server(port, poolSize);
-            server.start();
-        } catch (IOException e) {
-            System.out.println("Server Exception: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-
-     */
+}
