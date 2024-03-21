@@ -1,123 +1,65 @@
 package com.avans.cloudlocker.cloudlocker.client;
 import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
 
+    private  static DataOutputStream dataOutputStream = null;
+    /*
+    FileInputStream en FileOutputStream in combinatie met BufferedInputStream
+    en BufferedOutputStream voor het verwerken van bestandsdata.
+     */
+    // TODO Implementeer een mechanisme om te controleren of een bestand op de client
+    //  en server identiek is. Dit kan met behulp van checksums of hashes van de bestanden.
+    //  Alleen bestanden die
+    //  gewijzigd zijn of niet aanwezig zijn op de server moeten worden verzonden.
 
-    private Socket socket;
-    private BufferedReader reader;
-    private PrintWriter writer;
- /*
-    public void startConnection(String ip, int port) throws IOException {
-        socket = new Socket(ip, port);
-        reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        writer = new PrintWriter(socket.getOutputStream(), true);
-    }
+    // TODO ondersteuning voor grote bestanden: Zorg ervoor dat je systeem
+    //  efficiënt kan omgaan met grote bestanden.
+    //  Je kunt grote bestanden in chunks opdelen en deze
+    //  afzonderlijk verzenden en weer samenvoegen.
 
-    public void uploadFile(String filePath) throws IOException {
-        sendCommand("UPLOAD");
-        File file = new File(filePath);
-        writer.println(file.getName());
-        try (FileInputStream fis = new FileInputStream(file);
-             BufferedInputStream bis = new BufferedInputStream(fis);
-             OutputStream os = socket.getOutputStream()) {
-            byte[] bytes = new byte[4096];
-            int count;
-            while ((count = bis.read(bytes)) > 0) {
-                os.write(bytes, 0, count);
-            }
-            os.flush();
-            System.out.println("Bestand is geupload: " + filePath);
-        }
-    }
+    // TODO Netwerkfoutenafhandeling: Breid je code uit met
+    //  robuustere foutafhandelingsmechanismen voor situaties
+    //  waarin netwerkverbindingen worden verbroken of bestandsoverdrachten mislukken.
 
-    public void sendCommand(String command) {
-        writer.println(command);
-    }
 
-    public void stopConnection() throws IOException {
-        if (reader != null) {
-            reader.close();
-        }
-        if (writer != null) {
-            writer.close();
-        }
-        if (socket != null) {
-            socket.close();
-        }
-    }
+    // TODO Code-uitleg en documentatie: Zorg ervoor dat
+    //  je code goed gedocumenteerd is, met duidelijke uitleg
+    //  over hoe elke component werkt en hoe het samenwerkt binnen het systeem.
+
+
+    private static DataInputStream dataInputStream = null;
+    private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.out.println("Gebruik: java Client [upload] [bestandspad]");
-            return;
-        }
+        try(Socket socket = new Socket("localhost",5101)) { // willen we met elkaar communiceren moet het dus Socket socket = new Socket("192.168.1.5", 5101);
+            dataInputStream = new DataInputStream(socket.getInputStream());  // zijn ipv localhost en dan de port.
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        String command = args[0];
-        String filePath = args[1];
-
-        Client client = new Client();
-
-        try {
-            client.startConnection("127.0.0.1", 6666);
-
-            switch (command.toLowerCase()) {
-                case "upload":
-                    client.uploadFile(filePath);
+            while (true) {
+                System.out.print("input> ");
+                String message = scanner.nextLine();
+                dataOutputStream.writeUTF(message);
+                if(message.equalsIgnoreCase("exit()"))
                     break;
-                default:
-                    System.out.println("Ongeldig commando. Gebruik 'upload' om een bestand te uploaden.");
+                /*
+                case statement:
+                exit() : applicatie stopt
+                upload() : start upload proces, naam van bestand en bestandstype moet
+                meegegeven worden.
+                download() : start download proces, naam van bestand en bestandstype moet
+                meegegeven worden.
+                delete() : start delete proces, naam van bestand en bestandstype moet
+                meegegeven worden.
+
+
+                 */
             }
-        } catch (IOException e) {
-            System.out.println("Er is een fout opgetreden: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                client.stopConnection();
-            } catch (IOException e) {
-                System.out.println("Fout bij het afsluiten van de verbinding: " + e.getMessage());
-            }
-        }
-    }
 
-
-     */
-
-    // Binnen de Client class
-    private PrintWriter out;
-    private BufferedReader in;
-    private BufferedReader stdIn;
-
-    public void startConnection(String ip, int port) throws IOException {
-        socket = new Socket(ip, port);
-        out = new PrintWriter(socket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        stdIn = new BufferedReader(new InputStreamReader(System.in));
-    }
-
-    public void chatWithServer() throws IOException {
-        String userInput;
-        while ((userInput = stdIn.readLine()) != null) {
-            out.println(userInput);
-            System.out.println("Server: " + in.readLine());
-            if (userInput.equalsIgnoreCase("exit")) {
-                break;
+        }catch (Exception e){
+            System.out.println(e.toString());
             }
         }
     }
-
-    public void stopConnection() throws IOException {
-        stdIn.close();
-        in.close();
-        out.close();
-        socket.close();
-    }
-
-    public static void main(String[] args) throws IOException {
-        Client client = new Client();
-        client.startConnection("127.0.0.1", 6666);
-        client.chatWithServer();
-        client.stopConnection();
-    }
-}
