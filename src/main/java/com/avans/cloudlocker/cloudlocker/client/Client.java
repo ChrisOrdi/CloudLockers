@@ -14,17 +14,25 @@ public class Client {
             while (true) {
                 System.out.print("input> ");
                 String input = scanner.nextLine();
+                String[] parts = input.split(" ", 2);
+                String command = parts[0];
 
-                if ("exit()".equalsIgnoreCase(input)) {
-                    dataOutputStream.writeUTF(input);
-                    break;
-                } else if (input.startsWith("upload ")) {
-                    String filePath = input.split(" ")[1];
-                    dataOutputStream.writeUTF("upload");
-                    uploadFile(filePath, dataOutputStream);
-                } else {
-                    // Verstuur elk ander commando naar de server
-                    dataOutputStream.writeUTF(input);
+                switch (command.toLowerCase()) {
+                    case "exit()":
+                        dataOutputStream.writeUTF(input);
+                        return;  // Exit the program
+                    case "upload":
+                        if (parts.length > 1) {
+                            dataOutputStream.writeUTF("upload");
+                            uploadFile(parts[1], dataOutputStream);
+                        } else {
+                            System.out.println("Upload command requires a file path.");
+                        }
+                        break;
+                    default:
+                        // Verstuur elk ander commando naar de server
+                        dataOutputStream.writeUTF(input);
+                        break;
                 }
             }
         } catch (Exception e) {
@@ -32,6 +40,7 @@ public class Client {
             e.printStackTrace();
         }
     }
+
 
 
     private static void uploadFile(String filePath, DataOutputStream dataOutputStream) throws IOException {

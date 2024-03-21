@@ -44,22 +44,66 @@ public class Server {
             this.clientSocket = socket;
         }
 
-        public void run() {
+        public void run()  {
             try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
                 while (true) {
                     String command = dataInputStream.readUTF();
                     LOGGER.info("Client stuurde bericht: " + command);
 
-                    if (command.equals("exit()")) {
-                        break;
-                    } else if (command.startsWith("upload")) {
-                        receiveFile(dataInputStream);
-                    } else if (command.startsWith("create ")) {
-                        createDirectory(command.substring(7)); // Verwijder "create " om de mapnaam te krijgen
+                    // Splits het commando in commando en argumenten
+                    String[] parts = command.split(" ", 3);
+                    String action = parts[0];
+
+                    switch (action) {
+                        case "exit":
+                            return; // Beëindig de loop en dus de thread
+                        case "upload":
+                            if (parts.length > 1) {
+                                receiveFile(dataInputStream); // Aanname dat de rest van het commando correct is
+                            }
+                            break;
+                        case "create":
+                            if (parts.length == 2) {
+                                createDirectory(parts[1]);
+                            }
+                            break;
+                        case "createfile":
+                            if (parts.length == 3) {
+                                createFile(parts[1], parts[2]); // parts[1] is de directorynaam, parts[2] is de bestandsnaam
+                            } else {
+                                LOGGER.warning("Incorrect gebruik van createfile: verwacht 'createfile <directory> <filename>'");
+                            }
+                            break;
+                        default:
+                            LOGGER.warning("Onbekend commando ontvangen: " + command);
+                            break;
                     }
                 }
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
+            }
+        }
+
+        private void createFile(String directoryName, String fileName) {
+            String userHomeFolder = System.getProperty("user.home");
+            String directoryPath = userHomeFolder + "/Desktop/" + directoryName;
+            File directory = new File(directoryPath);
+            if (!directory.exists()) {
+                if (!directory.mkdir()) {
+                    LOGGER.severe("Could not create directory: " + directory.getPath());
+                    return;
+                }
+            }
+
+            File file = new File(directory, fileName);
+            try {
+                if (file.createNewFile()) {
+                    LOGGER.info("File created: " + file.getPath());
+                } else {
+                    LOGGER.info("File already exists: " + file.getPath());
+                }
+            } catch (IOException e) {
+                LOGGER.severe("Could not create file: " + file.getPath());
             }
         }
 
@@ -80,21 +124,23 @@ public class Server {
 
 
 
-        private void receiveFile(DataInputStream dataInputStream) throws IOException {
-            String fileName = dataInputStream.readUTF();
-            long fileSize = dataInputStream.readLong();
-            try (FileOutputStream fos = new FileOutputStream(fileName);
-                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                byte[] buffer = new byte[4096];
-                int read = 0;
-                long totalRead = 0;
-                while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int)Math.min(buffer.length, fileSize - totalRead))) != -1) {
-                    bos.write(buffer, 0, read);
-                    totalRead += read;
+
+
+            private void receiveFile (DataInputStream dataInputStream) throws IOException {
+                String fileName = dataInputStream.readUTF();
+                long fileSize = dataInputStream.readLong();
+                try (FileOutputStream fos = new FileOutputStream(fileName);
+                     BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                    byte[] buffer = new byte[4096];
+                    int read = 0;
+                    long totalRead = 0;
+                    while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalRead))) != -1) {
+                        bos.write(buffer, 0, read);
+                        totalRead += read;
+                    }
+                    bos.flush();
                 }
-                bos.flush();
+                LOGGER.info("File " + fileName + " received.");
             }
-            LOGGER.info("File " + fileName + " received.");
         }
     }
-}
