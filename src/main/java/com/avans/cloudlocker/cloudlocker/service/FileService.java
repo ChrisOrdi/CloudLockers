@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @Service
@@ -40,14 +41,17 @@ public class FileService {
         return fileRepository.findAll();
     }
 
-    public String getFileById(String id) {
-        // Logica voor het ophalen van een specifiek bestand
-        return fileRepository.findById(Integer.valueOf(id)).orElse(null);
+    public FileDocument getFileById(String id) {
+        Integer intId = Integer.parseInt(id); // Zet de String om naar Integer
+        Optional<FileDocument> result = fileRepository.findById(intId);
+        return result.orElse(null); // Geeft FileDocument terug of null als het niet wordt gevonden
     }
+
+
 
     public void deleteFile(String id) {
         // Logica voor het verwijderen van een bestand
-        fileRepository.deleteById(Integer.valueOf(id));
+        fileRepository.deleteById(id);
     }
 
     public void storeFile(MultipartFile file) throws IOException {

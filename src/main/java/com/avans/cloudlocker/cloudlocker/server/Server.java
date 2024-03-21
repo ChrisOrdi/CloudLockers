@@ -1,14 +1,60 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
-import java.io.*;
-import java.net.*;
-import java.util.concurrent.ExecutorService;
-
+import java.io.IOException; // libraries
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.logging.Logger;
 public class Server {
     private ServerSocket serverSocket;
-    private ExecutorService pool; // Voor het beheren van meerdere clients
+    private Logger logger;
+//    private ExecutorService pool; // Voor het beheren van meerdere clients
 
-    /*
+
+
+    // Binnen de ClientHandler class van de server
+
+        // constructor of ServerSocket class
+        public Server(ServerSocket serverSocket){
+            this.serverSocket = serverSocket;
+        }
+
+        public void serverStart(){
+
+            try{
+                // check and loop the serverSocket
+                while(!serverSocket.isClosed()){
+                    Socket socket = serverSocket.accept();
+                    System.out.println("New Client Connected");
+                    // implemented an object which handle runnable class
+                    ClientHandler clientHandler = new ClientHandler(socket);
+
+                    Thread thread = new Thread(clientHandler);
+                    thread.start();
+                }
+            } catch (IOException e){
+
+            }
+        }
+        // this will close the server
+        public void closerServer(){
+
+            try{
+                if(serverSocket != null){
+                    serverSocket.close();
+                }
+            } catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        public static void main(String[] args) throws Exception {
+            ServerSocket serverSocket = new ServerSocket(1234);
+            Server server = new Server(serverSocket);
+            server.serverStart();
+        }
+    }
+
+     /*
 
     public Server(int port, int poolSize) throws IOException {
         serverSocket = new ServerSocket(port);
@@ -140,60 +186,3 @@ public class Server {
 
 
      */
-
-    // Binnen de ClientHandler class van de server
-
-
-        public void start(int port) throws IOException {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Server gestart en luistert op poort " + port);
-
-            try {
-                while (true) {
-                    new ClientHandler(serverSocket.accept()).start();
-                }
-            } finally {
-                serverSocket.close();
-            }
-        }
-
-        private static class ClientHandler extends Thread {
-            private Socket clientSocket;
-            private PrintWriter out;
-            private BufferedReader in;
-
-            public ClientHandler(Socket socket) {
-                this.clientSocket = socket;
-            }
-
-            public void run() {
-                try {
-                    out = new PrintWriter(clientSocket.getOutputStream(), true);
-                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-                    String inputLine;
-                    while ((inputLine = in.readLine()) != null) {
-                        if ("knock-knock".equalsIgnoreCase(inputLine)) {
-                            out.println("Who's there?");
-                        } else {
-                            out.println("Je hebt: '" + inputLine + "' gestuurd.");
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        in.close();
-                        out.close();
-                        clientSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        public static void main(String[] args) throws IOException {
-            Server server = new Server();
-            server.start(6666);
-        }
-    }
