@@ -50,6 +50,8 @@ public class Server {
                     // Log een bericht elke keer als er iets wordt ontvangen
                     LOGGER.info("Client stuurde bericht: " + command);
 
+
+
                     if (command.equals("exit()")) {
                         break;
                     } else if (command.startsWith("upload")) {
