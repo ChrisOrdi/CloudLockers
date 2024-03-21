@@ -1,5 +1,8 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
+import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
+import com.avans.cloudlocker.cloudlocker.server.file.Delete;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,18 +17,17 @@ public class Server {
     public static void main(String[] args) {
         LocalDateTime now = LocalDateTime.now();
         Runtime runtime = Runtime.getRuntime();
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            long maxMemory = runtime.maxMemory();
-            long allocatedMemory = runtime.totalMemory();
-            long freeMemory = runtime.freeMemory();
-
-            LOGGER.info("Listening to port: " + portId);
-            LOGGER.info(String.format("Initialization Time: %s\nMax Memory: %d bytes\nAllocated Memory: %d bytes\nFree Memory: %d bytes\nAvailable Processors: %d",
-                    now, maxMemory, allocatedMemory, freeMemory, runtime.availableProcessors()));
-        }
+        long maxMemory = runtime.maxMemory();
+        long allocatedMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
 
         try (ServerSocket serverSocket = new ServerSocket(portId)) {
+            LOGGER.info("Listening to port: " + portId);
+            LOGGER.info("Initialization Time: " + now +
+                    "\nMax Memory: " + maxMemory + " bytes" +
+                    "\nAllocated Memory: " + allocatedMemory + " bytes" +
+                    "\nFree Memory: " + freeMemory + " bytes" +
+                    "\nAvailable Processors: " + runtime.availableProcessors());
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info(clientSocket + " connected");
@@ -35,7 +37,6 @@ public class Server {
             LOGGER.log(Level.SEVERE, "Server exception", e);
         }
     }
-
 
     private static class ClientHandler extends Thread {
         private Socket clientSocket;
@@ -48,37 +49,41 @@ public class Server {
             try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
                 while (true) {
                     String command = dataInputStream.readUTF();
-                    LOGGER.info("Client stuurde bericht: " + command);
+
+                    LOGGER.info("Client: " + command);
 
                     if (command.equals("exit()")) {
                         break;
                     } else if (command.startsWith("upload")) {
                         receiveFile(dataInputStream);
-                    } else if (command.startsWith("create ")) {
-                        createDirectory(command.substring(7)); // Verwijder "create " om de mapnaam te krijgen
+                    } else if (command.startsWith("delete")) {
+                        String[] parts = command.split(" ", 2);
+
+                        if (parts.length == 2) {
+                            String filepath = parts[1];
+                            var endpoint = new Delete();
+                            String result = endpoint.deleteFile(filepath);
+                            LOGGER.info(result);
+                        } else {
+                            LOGGER.warning("Invalid delete command format. Use: delete {filepath}");
+                        }
+                    } else if (command.startsWith("clearDirectory")) {
+                        String[] parts = command.split(" ", 2);
+
+                        if (parts.length == 2) {
+                            String filepath = parts[1];
+                            var endpoint = new Clear();
+                            String result = endpoint.clearDirectory(filepath);
+                            LOGGER.info(result);
+                        } else {
+                            LOGGER.warning("Invalid command format. Use: clearDirectory {directoryPath}");
+                        }
                     }
                 }
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
             }
         }
-
-        private void createDirectory(String directoryName) {
-            String userHomeFolder = System.getProperty("user.home");
-            String desktopPath = userHomeFolder + "/Desktop/" + directoryName;
-            File directory = new File(desktopPath);
-            if (!directory.exists()) {
-                if (directory.mkdir()) {
-                    LOGGER.info("Directory created: " + directory.getPath());
-                } else {
-                    LOGGER.severe("Failed to create directory: " + directory.getPath());
-                }
-            } else {
-                LOGGER.info("Directory already exists: " + directory.getPath());
-            }
-        }
-
-
 
         private void receiveFile(DataInputStream dataInputStream) throws IOException {
             String fileName = dataInputStream.readUTF();
