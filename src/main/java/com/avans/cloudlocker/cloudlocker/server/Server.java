@@ -2,6 +2,7 @@ package com.avans.cloudlocker.cloudlocker.server;
 
 import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
 import com.avans.cloudlocker.cloudlocker.server.file.Delete;
+import com.avans.cloudlocker.cloudlocker.server.file.Edit;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -57,26 +58,43 @@ public class Server {
                     } else if (command.startsWith("upload")) {
                         receiveFile(dataInputStream);
                     } else if (command.startsWith("delete")) {
-                        String[] parts = command.split(" ", 2);
+                        var parts = command.split(" ", 2);
 
                         if (parts.length == 2) {
-                            String filepath = parts[1];
+                            var filepath = parts[1];
                             var endpoint = new Delete();
-                            String result = endpoint.deleteFile(filepath);
+
+                            var result = endpoint.deleteFile(filepath);
+
                             LOGGER.info(result);
                         } else {
                             LOGGER.warning("Invalid delete command format. Use: delete {filepath}");
                         }
                     } else if (command.startsWith("clearDirectory")) {
-                        String[] parts = command.split(" ", 2);
+                        var parts = command.split(" ", 2);
 
                         if (parts.length == 2) {
-                            String filepath = parts[1];
+                            var filepath = parts[1];
                             var endpoint = new Clear();
-                            String result = endpoint.clearDirectory(filepath);
+
+                            var result = endpoint.clearDirectory(filepath);
+
                             LOGGER.info(result);
                         } else {
                             LOGGER.warning("Invalid command format. Use: clearDirectory {directoryPath}");
+                        }
+                    } else if (command.startsWith("edit")) {
+                        var parts = command.split(" ", 2);
+
+                        if (parts.length == 2) {
+                            var filepath = parts[1];
+                            var endpoint = new Edit();
+
+                            var result = endpoint.editFile(filepath);
+
+                            LOGGER.info(result);
+                        } else {
+                            LOGGER.warning("Invalid edit command format");
                         }
                     }
                 }

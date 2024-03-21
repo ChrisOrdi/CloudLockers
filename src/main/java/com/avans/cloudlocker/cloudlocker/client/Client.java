@@ -1,11 +1,12 @@
 package com.avans.cloudlocker.cloudlocker.client;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
 
-    private  static DataOutputStream dataOutputStream = null;
+    private static DataOutputStream dataOutputStream = null;
     /*
     FileInputStream en FileOutputStream in combinatie met BufferedInputStream
     en BufferedOutputStream voor het verwerken van bestandsdata.
