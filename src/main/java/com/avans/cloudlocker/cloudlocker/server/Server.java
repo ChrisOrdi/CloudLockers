@@ -12,7 +12,6 @@ public class Server {
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
     public static void main(String[] args) {
-
         LocalDateTime now = LocalDateTime.now();
         Runtime runtime = Runtime.getRuntime();
         long maxMemory = runtime.maxMemory();
@@ -21,7 +20,7 @@ public class Server {
 
         try (ServerSocket serverSocket = new ServerSocket(portId)) {
             LOGGER.info("Listening to port: " + portId);
-            LOGGER.info("Initialization Time: " + now.toString() +
+            LOGGER.info("Initialization Time: " + now +
                     "\nMax Memory: " + maxMemory + " bytes" +
                     "\nAllocated Memory: " + allocatedMemory + " bytes" +
                     "\nFree Memory: " + freeMemory + " bytes" +
@@ -29,11 +28,6 @@ public class Server {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info(clientSocket + " connected");
-                LOGGER.info("Initialization Time: " + now.toString() +
-                        "\nMax Memory: " + maxMemory + " bytes" +
-                        "\nAllocated Memory: " + allocatedMemory + " bytes" +
-                        "\nFree Memory: " + freeMemory + " bytes" +
-                        "\nAvailable Processors: " + runtime.availableProcessors());
                 new ClientHandler(clientSocket).start();
             }
         } catch (Exception e) {
@@ -43,30 +37,42 @@ public class Server {
 
     private static class ClientHandler extends Thread {
         private Socket clientSocket;
-        private DataInputStream dataInputStream;
-        private DataOutputStream dataOutputStream;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
         public void run() {
-            try {
-                dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
-
-                String message;
+            try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
                 while (true) {
-                    message = dataInputStream.readUTF();
-                    LOGGER.info("Message from client: " + message);
-                    if (message.equalsIgnoreCase("exit()")) {
+                    String command = dataInputStream.readUTF();
+
+                    if (command.equals("exit()")) {
                         break;
+                    } else if (command.startsWith("upload")) {
+                        receiveFile(dataInputStream);
                     }
                 }
-                clientSocket.close();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
             }
+        }
+
+        private void receiveFile(DataInputStream dataInputStream) throws IOException {
+            String fileName = dataInputStream.readUTF();
+            long fileSize = dataInputStream.readLong();
+            try (FileOutputStream fos = new FileOutputStream(fileName);
+                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                byte[] buffer = new byte[4096];
+                int read = 0;
+                long totalRead = 0;
+                while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int)Math.min(buffer.length, fileSize - totalRead))) != -1) {
+                    bos.write(buffer, 0, read);
+                    totalRead += read;
+                }
+                bos.flush();
+            }
+            LOGGER.info("File " + fileName + " received.");
         }
     }
 }
