@@ -1,5 +1,8 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
+import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
+import com.avans.cloudlocker.cloudlocker.server.file.Delete;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -47,10 +50,34 @@ public class Server {
                 while (true) {
                     String command = dataInputStream.readUTF();
 
+                    LOGGER.info("Client: " + command);
+
                     if (command.equals("exit()")) {
                         break;
                     } else if (command.startsWith("upload")) {
                         receiveFile(dataInputStream);
+                    } else if (command.startsWith("delete")) {
+                        String[] parts = command.split(" ", 2);
+
+                        if (parts.length == 2) {
+                            String filepath = parts[1];
+                            var endpoint = new Delete();
+                            String result = endpoint.deleteFile(filepath);
+                            LOGGER.info(result);
+                        } else {
+                            LOGGER.warning("Invalid delete command format. Use: delete {filepath}");
+                        }
+                    } else if (command.startsWith("clearDirectory")) {
+                        String[] parts = command.split(" ", 2);
+
+                        if (parts.length == 2) {
+                            String filepath = parts[1];
+                            var endpoint = new Clear();
+                            String result = endpoint.clearDirectory(filepath);
+                            LOGGER.info(result);
+                        } else {
+                            LOGGER.warning("Invalid command format. Use: clearDirectory {directoryPath}");
+                        }
                     }
                 }
             } catch (IOException e) {
