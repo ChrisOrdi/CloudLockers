@@ -47,6 +47,9 @@ public class Server {
                 while (true) {
                     String command = dataInputStream.readUTF();
 
+                    // Log een bericht elke keer als er iets wordt ontvangen
+                    LOGGER.info("Client stuurde bericht: " + command);
+
                     if (command.equals("exit()")) {
                         break;
                     } else if (command.startsWith("upload")) {
@@ -57,6 +60,7 @@ public class Server {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
             }
         }
+
 
         private void receiveFile(DataInputStream dataInputStream) throws IOException {
             String fileName = dataInputStream.readUTF();
