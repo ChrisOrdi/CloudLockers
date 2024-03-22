@@ -53,16 +53,16 @@ public class Server {
 
                     LOGGER.info("Client: " + command);
 
-                    // Splits het commando in commando en argumenten
+                    // Split command for method and arguments
                     String[] parts = command.split(" ", 3);
                     String action = parts[0];
 
                     switch (action) {
                         case "exit":
-                            return; // Beëindig de loop en dus de thread
+                            return; // End the thread
                         case "upload":
                             if (parts.length > 1) {
-                                receiveFile(dataInputStream); // Aanname dat de rest van het commando correct is
+                                receiveFile(dataInputStream);
                             }
                             break;
                         case "create":
@@ -70,11 +70,11 @@ public class Server {
                                 createDirectory(parts[1]);
                             }
                             break;
-                        case "createfile":
+                        case "createFile":
                             if (parts.length == 3) {
-                                createFile(parts[1], parts[2]); // parts[1] is de directorynaam, parts[2] is de bestandsnaam
+                                createFile(parts[1], parts[2]); // parts[1] should be directory, parts[2] should be filename
                             } else {
-                                LOGGER.warning("Incorrect gebruik van createfile: verwacht 'createfile <directory> <filename>'");
+                                LOGGER.warning("Invalid createFile command format. Use: createFile <directory> <filename>");
                             }
                             break;
                         case "delete":
@@ -84,7 +84,7 @@ public class Server {
                                 String result = endpoint.deleteFile(filepath);
                                 LOGGER.info(result);
                             } else {
-                                LOGGER.warning("Invalid delete command format. Use: delete {filepath}");
+                                LOGGER.warning("Invalid delete command format. Use: delete <filepath>");
                             }
                             break;
                         case "clearDirectory":
@@ -94,11 +94,11 @@ public class Server {
                                 String result = endpoint.clearDirectory(filepath);
                                 LOGGER.info(result);
                             } else {
-                                LOGGER.warning("Invalid command format. Use: clearDirectory {directoryPath}");
+                                LOGGER.warning("Invalid command format. Use: clearDirectory <directoryPath>");
                             }
                             break;
                         default:
-                            LOGGER.warning("Onbekend commando ontvangen: " + command);
+                            LOGGER.warning("Unknown command received: " + command);
                             break;
                     }
                 }

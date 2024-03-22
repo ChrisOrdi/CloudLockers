@@ -18,7 +18,7 @@ public class Client {
                 String command = parts[0];
 
                 switch (command.toLowerCase()) {
-                    case "exit()":
+                    case "exit":
                         dataOutputStream.writeUTF(input);
                         return;  // Exit the program
                     case "upload":
@@ -30,7 +30,6 @@ public class Client {
                         }
                         break;
                     default:
-                        // Verstuur elk ander commando naar de server
                         dataOutputStream.writeUTF(input);
                         break;
                 }
