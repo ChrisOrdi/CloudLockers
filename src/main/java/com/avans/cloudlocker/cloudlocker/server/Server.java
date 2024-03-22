@@ -1,5 +1,8 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
+import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
+import com.avans.cloudlocker.cloudlocker.server.file.Delete;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,7 +39,6 @@ public class Server {
         }
     }
 
-
     private static class ClientHandler extends Thread {
         private Socket clientSocket;
 
@@ -44,11 +46,12 @@ public class Server {
             this.clientSocket = socket;
         }
 
-        public void run()  {
+        public void run() {
             try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
                 while (true) {
                     String command = dataInputStream.readUTF();
-                    LOGGER.info("Client stuurde bericht: " + command);
+
+                    LOGGER.info("Client: " + command);
 
                     // Splits het commando in commando en argumenten
                     String[] parts = command.split(" ", 3);
@@ -72,6 +75,26 @@ public class Server {
                                 createFile(parts[1], parts[2]); // parts[1] is de directorynaam, parts[2] is de bestandsnaam
                             } else {
                                 LOGGER.warning("Incorrect gebruik van createfile: verwacht 'createfile <directory> <filename>'");
+                            }
+                            break;
+                        case "delete":
+                            if (parts.length == 2) {
+                                String filepath = parts[1];
+                                var endpoint = new Delete();
+                                String result = endpoint.deleteFile(filepath);
+                                LOGGER.info(result);
+                            } else {
+                                LOGGER.warning("Invalid delete command format. Use: delete {filepath}");
+                            }
+                            break;
+                        case "clearDirectory":
+                            if (parts.length == 2) {
+                                String filepath = parts[1];
+                                var endpoint = new Clear();
+                                String result = endpoint.clearDirectory(filepath);
+                                LOGGER.info(result);
+                            } else {
+                                LOGGER.warning("Invalid command format. Use: clearDirectory {directoryPath}");
                             }
                             break;
                         default:
@@ -122,25 +145,21 @@ public class Server {
             }
         }
 
-
-
-
-
-            private void receiveFile (DataInputStream dataInputStream) throws IOException {
-                String fileName = dataInputStream.readUTF();
-                long fileSize = dataInputStream.readLong();
-                try (FileOutputStream fos = new FileOutputStream(fileName);
-                     BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                    byte[] buffer = new byte[4096];
-                    int read = 0;
-                    long totalRead = 0;
-                    while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalRead))) != -1) {
-                        bos.write(buffer, 0, read);
-                        totalRead += read;
-                    }
-                    bos.flush();
+        private void receiveFile (DataInputStream dataInputStream) throws IOException {
+            String fileName = dataInputStream.readUTF();
+            long fileSize = dataInputStream.readLong();
+            try (FileOutputStream fos = new FileOutputStream(fileName);
+                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                byte[] buffer = new byte[4096];
+                int read = 0;
+                long totalRead = 0;
+                while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalRead))) != -1) {
+                    bos.write(buffer, 0, read);
+                    totalRead += read;
                 }
-                LOGGER.info("File " + fileName + " received.");
+                bos.flush();
             }
+            LOGGER.info("File " + fileName + " received.");
         }
     }
+}
