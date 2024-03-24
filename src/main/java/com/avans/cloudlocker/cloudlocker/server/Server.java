@@ -122,7 +122,28 @@ public class Server {
             }
         }
 
+        private void createFile(String directoryName, String fileName) {
+            String userHomeFolder = System.getProperty("user.home");
+            String directoryPath = userHomeFolder + "/Desktop/" + directoryName;
+            File directory = new File(directoryPath);
+            if (!directory.exists()) {
+                if (!directory.mkdir()) {
+                    LOGGER.severe("Could not create directory: " + directory.getPath());
+                    return;
+                }
+            }
 
+            File file = new File(directory, fileName);
+            try {
+                if (file.createNewFile()) {
+                    LOGGER.info("File created: " + file.getPath());
+                } else {
+                    LOGGER.info("File already exists: " + file.getPath());
+                }
+            } catch (IOException e) {
+                LOGGER.severe("Could not create file: " + file.getPath());
+            }
+        }
 
         private void receiveFile(DataInputStream dataInputStream) throws IOException {
             String fileName = dataInputStream.readUTF();
