@@ -96,7 +96,7 @@ public class Server {
 
                                 LOGGER.info(result);
                             } else {
-                                LOGGER.warning("Invalid delete command format. Use: delete <filepath>");
+                                LOGGER.warning("Invalid delete command format. Use: delete <filePath>");
                             }
                             break;
                         case "clearDirectory":
@@ -109,6 +109,15 @@ public class Server {
                                 LOGGER.warning("Invalid command format. Use: clearDirectory <directoryPath>");
                             }
                             break;
+                        case "editFile":
+                            if (parts.length == 2) {
+                                var endpoint = new Edit();
+                                var result = endpoint.editFile(parts[1]);
+
+                                LOGGER.info(result);
+                            } else {
+                                LOGGER.warning("Invalid command format. Use: editFile <filePath>");
+                            }
                         default:
                             LOGGER.warning("Unknown command received: " + command);
                             break;

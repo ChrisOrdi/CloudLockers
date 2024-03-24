@@ -16,10 +16,6 @@ public class Edit {
             return "Could not get the file.";
         }
 
-        if (!file.canWrite()) {
-            return MessageFormat.format("Can not open file {0} as it is opened in another client.", file.getName());
-        }
-
         if (!Desktop.isDesktopSupported()) {
             return "Can not open file on desktop.";
         }
@@ -27,12 +23,6 @@ public class Edit {
         Desktop desktop = Desktop.getDesktop();
         desktop.open(file);
 
-        var modified = file.setWritable(false);
-
-        if (modified) {
-            return MessageFormat.format("File {0} is now locked for modification.", file.getName());
-        } else {
-            return MessageFormat.format("Could not lock file {0}.", file.getName());
-        }
+        return MessageFormat.format("File {0} is now locked for modification.", file.getName());
     }
 }
