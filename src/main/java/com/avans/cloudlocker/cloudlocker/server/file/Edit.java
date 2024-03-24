@@ -1,7 +1,8 @@
 package com.avans.cloudlocker.cloudlocker.server.file;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.text.MessageFormat;
 
 public class Edit {

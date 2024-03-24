@@ -2,8 +2,8 @@ package com.avans.cloudlocker.cloudlocker.server;
 
 import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
 import com.avans.cloudlocker.cloudlocker.server.directory.Create;
-import com.avans.cloudlocker.cloudlocker.server.file.Delete;
 import com.avans.cloudlocker.cloudlocker.server.file.Edit;
+import com.avans.cloudlocker.cloudlocker.server.file.Delete;
 import com.avans.cloudlocker.cloudlocker.server.file.Receive;
 
 import java.io.*;
