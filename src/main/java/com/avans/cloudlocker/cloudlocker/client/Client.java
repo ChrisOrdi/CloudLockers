@@ -7,32 +7,7 @@ import java.util.Scanner;
 public class Client {
 
     private static DataOutputStream dataOutputStream = null;
-    /*
-    FileInputStream en FileOutputStream in combinatie met BufferedInputStream
-    en BufferedOutputStream voor het verwerken van bestandsdata.
-     */
-    // TODO Implementeer een mechanisme om te controleren of een bestand op de client
-    //  en server identiek is. Dit kan met behulp van checksums of hashes van de bestanden.
-    //  Alleen bestanden die
-    //  gewijzigd zijn of niet aanwezig zijn op de server moeten worden verzonden.
-
-    // TODO ondersteuning voor grote bestanden: Zorg ervoor dat je systeem
-    //  efficiënt kan omgaan met grote bestanden.
-    //  Je kunt grote bestanden in chunks opdelen en deze
-    //  afzonderlijk verzenden en weer samenvoegen.
-
-    // TODO Netwerkfoutenafhandeling: Breid je code uit met
-    //  robuustere foutafhandelingsmechanismen voor situaties
-    //  waarin netwerkverbindingen worden verbroken of bestandsoverdrachten mislukken.
-
-
-    // TODO Code-uitleg en documentatie: Zorg ervoor dat
-    //  je code goed gedocumenteerd is, met duidelijke uitleg
-    //  over hoe elke component werkt en hoe het samenwerkt binnen het systeem.
-
-
     private static DataInputStream dataInputStream = null;
-    private static DataOutputStream dataOutputStream = null;
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -67,8 +42,6 @@ public class Client {
             e.printStackTrace();
         }
     }
-
-
 
     private static void uploadFile(String filePath, DataOutputStream dataOutputStream) throws IOException {
         File file = new File(filePath);
