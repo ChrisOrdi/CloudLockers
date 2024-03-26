@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileStorage {
-    private static final String cloudStoragePath = "C:\\Temp\\CloudLockerStorage";
+    private static final String CLOUD_STORAGE_PATH = "C:\\Temp\\CloudLockerStorage";
     public static String localStoragePath;
 
     public String syncWithCloudStorage(String directoryPath) throws IOException {
@@ -39,7 +39,7 @@ public class FileStorage {
     }
 
     private int configureCloudStorage() throws IOException {
-        var cloudPath = Paths.get(cloudStoragePath);
+        var cloudPath = Paths.get(CLOUD_STORAGE_PATH);
         var localPath = Paths.get(localStoragePath);
         var fileCount = new AtomicInteger();
 
