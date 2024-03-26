@@ -1,10 +1,13 @@
 package com.avans.cloudlocker.cloudlocker.client;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
+
     private static DataOutputStream dataOutputStream = null;
+    private static DataInputStream dataInputStream = null;
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -39,8 +42,6 @@ public class Client {
             e.printStackTrace();
         }
     }
-
-
 
     private static void uploadFile(String filePath, DataOutputStream dataOutputStream) throws IOException {
         File file = new File(filePath);

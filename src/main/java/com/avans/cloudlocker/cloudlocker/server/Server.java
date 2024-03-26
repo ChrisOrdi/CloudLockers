@@ -1,7 +1,11 @@
 package com.avans.cloudlocker.cloudlocker.server;
 
 import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
+import com.avans.cloudlocker.cloudlocker.server.directory.Create;
+import com.avans.cloudlocker.cloudlocker.server.directory.FileStorage;
+import com.avans.cloudlocker.cloudlocker.server.file.Edit;
 import com.avans.cloudlocker.cloudlocker.server.file.Delete;
+import com.avans.cloudlocker.cloudlocker.server.file.Receive;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -62,39 +66,66 @@ public class Server {
                             return; // End the thread
                         case "upload":
                             if (parts.length > 1) {
-                                receiveFile(dataInputStream);
+                                var endpoint = new Receive();
+                                var result = endpoint.receiveFile(dataInputStream);
+
+                                LOGGER.info(result);
                             }
                             break;
                         case "create":
                             if (parts.length == 2) {
-                                createDirectory(parts[1]);
+                                var endpoint = new Create();
+                                var result = endpoint.createDirectory(parts[1]);
+
+                                LOGGER.info(result);
                             }
                             break;
                         case "createFile":
                             if (parts.length == 3) {
-                                createFile(parts[1], parts[2]); // parts[1] should be directory, parts[2] should be filename
+                                var endpoint = new com.avans.cloudlocker.cloudlocker.server.file.Create();
+                                var result = endpoint.createFile(parts[1], parts[2]); // parts[1] should be directory, parts[2] should be filename
+
+                                LOGGER.info(result);
                             } else {
                                 LOGGER.warning("Invalid createFile command format. Use: createFile <directory> <filename>");
                             }
                             break;
                         case "delete":
                             if (parts.length == 2) {
-                                String filepath = parts[1];
                                 var endpoint = new Delete();
-                                String result = endpoint.deleteFile(filepath);
+                                var result = endpoint.deleteFile(parts[1]);
+
                                 LOGGER.info(result);
                             } else {
-                                LOGGER.warning("Invalid delete command format. Use: delete <filepath>");
+                                LOGGER.warning("Invalid delete command format. Use: delete <filePath>");
                             }
                             break;
                         case "clearDirectory":
                             if (parts.length == 2) {
-                                String filepath = parts[1];
                                 var endpoint = new Clear();
-                                String result = endpoint.clearDirectory(filepath);
+                                var result = endpoint.clearDirectory(parts[1]);
+
                                 LOGGER.info(result);
                             } else {
                                 LOGGER.warning("Invalid command format. Use: clearDirectory <directoryPath>");
+                            }
+                            break;
+                        case "editFile":
+                            if (parts.length == 2) {
+                                var endpoint = new Edit();
+                                var result = endpoint.editFile(parts[1]);
+
+                                LOGGER.info(result);
+                            } else {
+                                LOGGER.warning("Invalid command format. Use: editFile <filePath>");
+                            }
+                            break;
+                        case "syncWithCloudStorage":
+                            if (parts.length == 2) {
+                                var endpoint = new FileStorage();
+                                var result = endpoint.syncWithCloudStorage(parts[1]);
+
+                                LOGGER.info(result);
                             }
                             break;
                         default:
@@ -105,61 +136,6 @@ public class Server {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Connection error", e);
             }
-        }
-
-        private void createDirectory(String directoryName) {
-            String userHomeFolder = System.getProperty("user.home");
-            String desktopPath = userHomeFolder + "/Desktop/" + directoryName;
-            File directory = new File(desktopPath);
-            if (!directory.exists()) {
-                if (directory.mkdir()) {
-                    LOGGER.info("Directory created: " + directory.getPath());
-                } else {
-                    LOGGER.severe("Failed to create directory: " + directory.getPath());
-                }
-            } else {
-                LOGGER.info("Directory already exists: " + directory.getPath());
-            }
-        }
-
-        private void createFile(String directoryName, String fileName) {
-            String userHomeFolder = System.getProperty("user.home");
-            String directoryPath = userHomeFolder + "/Desktop/" + directoryName;
-            File directory = new File(directoryPath);
-            if (!directory.exists()) {
-                if (!directory.mkdir()) {
-                    LOGGER.severe("Could not create directory: " + directory.getPath());
-                    return;
-                }
-            }
-
-            File file = new File(directory, fileName);
-            try {
-                if (file.createNewFile()) {
-                    LOGGER.info("File created: " + file.getPath());
-                } else {
-                    LOGGER.info("File already exists: " + file.getPath());
-                }
-            } catch (IOException e) {
-                LOGGER.severe("Could not create file: " + file.getPath());
-            }
-        }
-
-        private void receiveFile(DataInputStream dataInputStream) throws IOException {
-            String fileName = dataInputStream.readUTF();
-            long fileSize = dataInputStream.readLong();
-            try (FileOutputStream fos = new FileOutputStream(fileName);
-                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                byte[] buffer = new byte[4096];
-                int read = 0;
-                long totalRead = 0;
-                while (totalRead < fileSize && (read = dataInputStream.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalRead))) != -1) {
-                    bos.write(buffer, 0, read);
-                    totalRead += read;
-                }
-                bos.flush();
-            }
-            LOGGER.info("File " + fileName + " received.");
         }
     }
 }
