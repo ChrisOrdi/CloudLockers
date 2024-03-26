@@ -123,7 +123,7 @@ public class Server {
                         case "syncWithCloudStorage":
                             if (parts.length == 2) {
                                 var endpoint = new FileStorage();
-                                var result = endpoint.syncWithCloudStorage();
+                                var result = endpoint.syncWithCloudStorage(parts[1]);
 
                                 LOGGER.info(result);
                             }
