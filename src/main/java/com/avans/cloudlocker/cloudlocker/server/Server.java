@@ -2,6 +2,7 @@ package com.avans.cloudlocker.cloudlocker.server;
 
 import com.avans.cloudlocker.cloudlocker.server.directory.Clear;
 import com.avans.cloudlocker.cloudlocker.server.directory.Create;
+import com.avans.cloudlocker.cloudlocker.server.directory.FileStorage;
 import com.avans.cloudlocker.cloudlocker.server.file.Edit;
 import com.avans.cloudlocker.cloudlocker.server.file.Delete;
 import com.avans.cloudlocker.cloudlocker.server.file.Receive;
@@ -118,6 +119,15 @@ public class Server {
                             } else {
                                 LOGGER.warning("Invalid command format. Use: editFile <filePath>");
                             }
+                            break;
+                        case "syncWithCloudStorage":
+                            if (parts.length == 2) {
+                                var endpoint = new FileStorage();
+                                var result = endpoint.syncWithCloudStorage();
+
+                                LOGGER.info(result);
+                            }
+                            break;
                         default:
                             LOGGER.warning("Unknown command received: " + command);
                             break;
